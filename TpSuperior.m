@@ -30,6 +30,11 @@ switch funcion
         B=[-t t];
         T=4;
 end
+% funcOriginal=0;
+% for i=1:length(B)
+%     funcOriginal = funcOriginal + sum(B(i));
+% end
+% funcOriginal=simplify(funcOriginal);
 
 w0=2*pi/T;
 
@@ -80,8 +85,27 @@ an = simplify(sym(strrep(char(an),'sin(2*pi*n)','1')));
 bn = simplify(sym(strrep(char(bn),'sin(2*pi*n)','1')));
 
 %%%
+% for n=1:armonicas
+%     f(n,:) = sum((eval(an))*cos(n*w0*t)+(eval(bn))*sin(n*w0*t));
+% end
 
-
+error=1;
+n=1;
+while (n<5)%(error>0.5)%((n<armonicas&armonicas<=50)&(error>0.05))
+     f(n,:) = sum((eval(an))*cos(n*w0*t)+(eval(bn))*sin(n*w0*t));
+     
+     num=0;
+     denum=0;
+     for i=1:length(B)
+         num=num+int(abs(B(i)-f),'t',A(i),A(i+1));
+         denum=denum+int(B(i),'t',A(i),A(i+1));
+     end
+     error=eval((num)/(denum));
+%      simplify(error);
+     error
+     %error=(int(abs(funcOriginal-f),0,T))/(int(abs(funcOriginal),0,T));
+     n=n+1;
+end
 
 
 
