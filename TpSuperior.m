@@ -23,18 +23,13 @@ switch funcion
        T=4;
     case 2
         A=[0 2];
-        B=[ t ];
+        B=[t];
         T=2;
     case 3
         A=[-2 0 2];
         B=[-t t];
         T=4;
 end
-% funcOriginal=0;
-% for i=1:length(B)
-%     funcOriginal = funcOriginal + sum(B(i));
-% end
-% funcOriginal=simplify(funcOriginal);
 
 w0=2*pi/T;
 
@@ -43,13 +38,14 @@ B=sym(B); %Hacemos simbolico el array de la funcion con los valores entre los in
 x1=input('Ingrese limite inferior del intervalo: ');
 x2=input('Ingrese limite superior del intervalo: ');
 armonicas=input('Ingrese cantidad de armonicas minimas: ');
+fprintf('\n');
 
 syms t n
 
 %%% Calculamos Ao
 a0=0;
 for i=1:length(B)
-        a0 = a0 + int(B(i),'t',A(i),A(i+1));
+        a0 = a0 + int(B(i),A(i),A(i+1));
 end
 a0=simplify(a0/T);
 
@@ -84,50 +80,61 @@ bn = simplify(sym(strrep(char(bn),'sin(2*pi*n)','0')));
 an = simplify(sym(strrep(char(an),'sin(2*pi*n)','1')));
 bn = simplify(sym(strrep(char(bn),'sin(2*pi*n)','1')));
 
-%%%
-% for n=1:armonicas
-%     f(n,:) = sum((eval(an))*cos(n*w0*t)+(eval(bn))*sin(n*w0*t));
-% end
-
 error=1;
-n=1;
-while (n<5)%(error>0.5)%((n<armonicas&armonicas<=50)&(error>0.05))
-     f(n,:) = sum((eval(an))*cos(n*w0*t)+(eval(bn))*sin(n*w0*t));
+salir=1;
+while (salir==1)
+     stf=a0;
+     for n=1:armonicas
+         stf= stf + eval(sum(an*cos(n*w0*t)+bn*sin(n*w0*t)));
+     end
      
+     armonicas=armonicas+1;
+          
      num=0;
      denum=0;
      for i=1:length(B)
-         num=num+int(abs(B(i)-f),'t',A(i),A(i+1));
-         denum=denum+int(B(i),'t',A(i),A(i+1));
+        num=num+int( (B(i)-stf) ,A(i),A(i+1));
+        num=abs(num);
+        denum=denum+int(B(i),A(i),A(i+1));
      end
-     error=eval((num)/(denum));
-%      simplify(error);
-     error
-     %error=(int(abs(funcOriginal-f),0,T))/(int(abs(funcOriginal),0,T));
-     n=n+1;
+     
+     error=((num)/(denum));
+     error=eval(error);
+     fprintf('Con %d armonicas el error es de %10.7f %% \n',armonicas-1,error*100);
+     
+     if (error<0.05) || (armonicas>=50)
+        salir=0;
+     end
 end
 
 
+x= linspace(x1,x2,100);
+Original=[];
+Stf=[];
+minA=min(A);
+maxA=max(A);
 
-x= linspace(x1,x2,10);
-fx=0;
-for i=1:length(A)-1
-   fx = fx + ((x>A(i))&(x<A(i+1))).*subs(B(i),x); 
+syms aux
+for i=1:length(x)
+   aux=x(i);
+   while ((aux<minA)||(aux>maxA))
+       if (aux<minA)
+           aux=aux+T;
+       else
+           aux=aux-T;
+       end
+   end
+   
+  for j=1:length(B)
+      if ( aux>=A(j) && aux<=A(j+1) )
+          func=inline(B(j));
+          Original(i)=func(aux);
+      end
+  end
+       
 end
-plot(x, fx, 'Linewidth', 2); hold on
-plot(x+max(x)-min(x), fx, 'Linewidth', 2)
-plot(x-max(x)+min(x), fx, 'Linewidth', 2)
-plot([max(x) max(x)], [fx(1) fx(end)], 'linewidth', 2)
-plot([min(x) min(x)], [fx(end) fx(1)], 'linewidth', 2)
-grid on
-xlabel('\bfTIEMPO');
-ylabel('\bfAMPLITUD');
-title('\bfGRAFICA DE LA FUNCION');
 
-% while condicion
-%     an = an + int(f*cos(n*w0*t),x1,x2); 
-%     
-%    % error= (int())/();
-% end
-% bn
 
+plot(x,Original), hold on
+ezplot(stf,x)
+xlabel('\bfTIEMPO'); ylabel('\bfAMPLITUD'); title('\bfGRAFICA DE LA FUNCION');
