@@ -80,16 +80,24 @@ bn = simplify(sym(strrep(char(bn),'sin(2*pi*n)','0')));
 an = simplify(sym(strrep(char(an),'sin(2*pi*n)','1')));
 bn = simplify(sym(strrep(char(bn),'sin(2*pi*n)','1')));
 
+
+%%%Este es el while principal en el cual calculamos la serie y evaluamos el
+%%%error de la aproximacion encontrada
+
 error=1;
 salir=1;
 while (salir==1)
+    
+    %%%En esta pequeña parte calculo la serie en funcion de la variable t
+    %%%Lo mejor seria ponerla en una funcion pero no pude hacerlo
      stf=a0;
      for n=1:armonicas
          stf= stf + eval(sum(an*cos(n*w0*t)+bn*sin(n*w0*t)));
      end
-     
      armonicas=armonicas+1;
-          
+         
+     %%%Calculo el error y muestro la cantidad de armonicas necesarias para
+     %%%lograr un error menor al 5%
      num=0;
      denum=0;
      for i=1:length(B)
@@ -97,26 +105,30 @@ while (salir==1)
         num=abs(num);
         denum=denum+int(B(i),A(i),A(i+1));
      end
-     
      error=((num)/(denum));
      error=eval(error);
      fprintf('Con %d armonicas el error es de %10.7f %% \n',armonicas-1,error*100);
      
+     %%%Solo salgo del while si el error es menor al 5% o si ya probe con
+     %%%50 armonicas
      if (error<0.05) || (armonicas>=50)
         salir=0;
      end
 end
 
-
+%%%Genero un array con 100 elementos entre el rango propuesto por el usuario
 x= linspace(x1,x2,100);
 Original=[];
 Stf=[];
 minA=min(A);
 maxA=max(A);
 
+%%%Esto tambien deberia ponerlo en funciones, pero no se como se hace
 syms aux
 for i=1:length(x)
    aux=x(i);
+   %%%Creo un array llamado Original para poder situar los valores fuera
+   %%%del periodo dentro de este.
    while ((aux<minA)||(aux>maxA))
        if (aux<minA)
            aux=aux+T;
@@ -125,6 +137,8 @@ for i=1:length(x)
        end
    end
    
+  %%%Y aca reemplazo el elemento del array Original por la posicion en el
+  %%%eje Y
   for j=1:length(B)
       if ( aux>=A(j) && aux<=A(j+1) )
           func=inline(B(j));
@@ -134,7 +148,11 @@ for i=1:length(x)
        
 end
 
-
+%%%Grafico la funcion original pasandole los 2 arrays
 plot(x,Original), hold on
+
+%%%Y aca grafico la serie trigonometrica de Fourier pasandole el array de X
+%%%y la funcion
+%%%Esta funcion evalua cada elemento en la funcion pasada
 ezplot(stf,x)
 xlabel('\bfTIEMPO'); ylabel('\bfAMPLITUD'); title('\bfGRAFICA DE LA FUNCION');
